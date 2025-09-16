@@ -1,19 +1,15 @@
-try {
-    const { username, email, password, confirmPassword } = req.body;
+const authService = require("../services/authService");
+
+// Đăng ký người dùng mới
+async function register(req, res) {
+  try {
+    const { username, email, password } = req.body;
 
     // Kiểm tra dữ liệu đầu vào
-    if (!username || !email || !password || !confirmPassword) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
         message: "Vui lòng cung cấp đầy đủ thông tin"
-      });
-    }
-
-    // Kiểm tra mật khẩu xác nhận
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Mật khẩu xác nhận không khớp"
       });
     }
 
@@ -64,3 +60,98 @@ try {
       message: "Lỗi server khi đăng ký"
     });
   }
+}
+
+// Đăng nhập người dùng
+async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp email và mật khẩu"
+      });
+    }
+
+    // Gọi service để đăng nhập
+    const result = await authService.loginUser(email, password);
+
+    // Đặt cookie nếu cần (tùy chọn)
+    if (result.token) {
+      res.cookie('token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: {
+        user: result.user,
+        token: result.token
+      }
+    });
+
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+    
+    // Xử lý lỗi cụ thể
+    if (error.message.includes("not found") || error.message.includes("không tồn tại")) {
+      return res.status(404).json({
+        success: false,
+        message: "Email không tồn tại"
+      });
+    }
+    
+    if (error.message.includes("password") || error.message.includes("mật khẩu")) {
+      return res.status(401).json({
+        success: false,
+        message: "Mật khẩu không chính xác"
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi đăng nhập"
+    });
+  }
+}
+
+// Đăng xuất người dùng
+async function logout(req, res) {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy token"
+      });
+    }
+
+    // Gọi service để đăng xuất (có thể thêm token vào blacklist)
+    await authService.logoutUser(token);
+
+    // Xóa cookie
+    res.clearCookie('token');
+
+    res.status(200).json({
+      success: true,
+      message: "Đăng xuất thành công"
+    });
+
+  } catch (error) {
+    console.error("Lỗi đăng xuất:", error);
+    
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi đăng xuất"
+    });
+  }
+}
+
+module.exports = { register, login, logout };
