@@ -10,6 +10,9 @@ const port = 3000;
 
 const app = express();
 
+const morgan = require("morgan");
+app.use(morgan("dev"));
+
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
