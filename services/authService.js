@@ -29,7 +29,7 @@ async function login(email, password) {
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return { status: 400, message: "Mat khau khong chinh xac" };
+    return { status: 400, message: "Sai email hoac password" };
   }
 
   const token = jwt.sign(
