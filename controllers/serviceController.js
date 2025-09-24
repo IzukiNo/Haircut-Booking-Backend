@@ -4,7 +4,7 @@ async function createService(req, res) {
   try {
     const { name, description, price, status } = req.body;
 
-    if (!name || !price === undefined) {
+    if (!name || price == null) {
       return res
         .status(400)
         .json({ status: 400, message: "Tham số đầu vào không hợp lệ" });
