@@ -10,7 +10,11 @@ const appointmentSchema = new mongoose.Schema({
   service: { type: String, required: true },
   date: { type: Date, required: true },
   time: { type: String, required: true },
-  location: { type: String, required: true },
+  branchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+    required: true,
+  },
   status: {
     type: String,
     enum: ["pending", "confirmed", "canceled", "completed"],

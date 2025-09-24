@@ -5,6 +5,8 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const authRoutes = require("./routes/authRoute");
+const appointmentRoutes = require("./routes/appointmentRoute");
+const userRoutes = require("./routes/userRoutes");
 
 const port = 3000;
 
@@ -23,6 +25,8 @@ mongoose
   .catch((err) => console.error("❌ Kết nối MongoDB thất bại:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/users", userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
