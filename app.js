@@ -7,6 +7,8 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoute");
 const appointmentRoutes = require("./routes/appointmentRoute");
 const userRoutes = require("./routes/userRoutes");
+const branchRoutes = require("./routes/branchRoute");
+const serviceRoutes = require("./routes/serviceRoute");
 
 const port = 3000;
 
@@ -26,6 +28,8 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/branches", branchRoutes);
+app.use("/api/services", serviceRoutes);
 app.use("/api/users", userRoutes);
 
 app.listen(port, () => {
