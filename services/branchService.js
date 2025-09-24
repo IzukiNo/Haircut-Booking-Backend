@@ -107,16 +107,13 @@ async function updateBranch(branchId, data) {
 
 async function deleteBranch(branchId) {
   try {
-    const branch = await Branch.findById(branchId);
-    if (!branch) {
+    const deletedBranch = await Branch.findByIdAndDelete(branchId);
+    if (!deletedBranch) {
       return {
         status: 404,
         message: "Branch not found",
       };
     }
-
-    await Branch.findByIdAndDelete(branchId);
-
     return {
       status: 200,
       message: "Branch deleted successfully",
