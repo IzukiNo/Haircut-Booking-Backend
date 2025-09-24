@@ -78,30 +78,30 @@ async function getBranchById(branchId) {
 
 async function updateBranch(branchId, data) {
   try {
-    const branch = await Branch.findById(branchId);
-    if (!branch) {
-      return { status: 404, message: "Branch not found" };
-    }
-
-    if (data.name !== undefined) branch.name = data.name;
-    if (data.address !== undefined) branch.address = data.address;
-    if (data.phone !== undefined) branch.phone = data.phone;
-    if (data.managerId !== undefined) branch.managerId = data.managerId;
-
-    await branch.save();
-
-    const updated = await Branch.findById(branchId).populate({
+    const updated = await Branch.findByIdAndUpdate(
+      branchId,
+      { ...data, updatedAt: new Date() },
+      { new: true }
+    ).populate({
       path: "managerId",
       select: "username email phone",
     });
+
+    if (!updated) {
+      return { status: 404, message: "Branch not found", data: null };
+    }
 
     return {
       status: 200,
       message: "Branch updated successfully",
       data: updated,
     };
-  } catch (error) {
-    return { status: 500, message: "Error updating branch" };
+  } catch (err) {
+    return {
+      status: 500,
+      message: "Error updating branch",
+      data: err.message,
+    };
   }
 }
 

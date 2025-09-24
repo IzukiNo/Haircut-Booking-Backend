@@ -23,6 +23,7 @@ async function createService(name, description, price, status = true) {
     };
   }
 }
+
 async function getAllServices() {
   try {
     const services = await Service.find();
@@ -39,6 +40,7 @@ async function getAllServices() {
     };
   }
 }
+
 async function getServiceById(serviceId) {
   try {
     const service = await Service.findById(serviceId);
@@ -58,6 +60,7 @@ async function getServiceById(serviceId) {
     };
   }
 }
+
 async function updateService(serviceId, data) {
   try {
     const updated = await Service.findByIdAndUpdate(
@@ -81,6 +84,7 @@ async function updateService(serviceId, data) {
     };
   }
 }
+
 async function deleteService(serviceId) {
   try {
     const deleted = await Service.findByIdAndDelete(serviceId);
@@ -100,6 +104,7 @@ async function deleteService(serviceId) {
     };
   }
 }
+
 module.exports = {
   createService,
   getAllServices,
