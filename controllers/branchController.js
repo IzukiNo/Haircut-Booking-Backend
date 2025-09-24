@@ -4,7 +4,7 @@ async function createBranch(req, res) {
   try {
     const { name, address, phone, managerId } = req.body;
 
-    if (!name || !address || !phone || !managerId) {
+    if (!name || !address || !phone) {
       return res
         .status(400)
         .json({ status: 400, message: "Tham số đầu vào không hợp lệ" });
