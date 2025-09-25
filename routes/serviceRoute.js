@@ -3,14 +3,10 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const router = require("express").Router();
 
 router.post("/", authMiddleware(["admin"]), serviceController.createService);
-router.get(
-  "/",
-  authMiddleware(["user", "staff", "admin"]),
-  serviceController.getAllServices
-);
+router.get("/", authMiddleware(["user"]), serviceController.getAllServices);
 router.get(
   "/:serviceId",
-  authMiddleware(["user", "staff", "admin"]),
+  authMiddleware(["user"]),
   serviceController.getServiceById
 );
 router.patch(

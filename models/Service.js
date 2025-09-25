@@ -6,7 +6,6 @@ const serviceSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   status: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("Service", serviceSchema);
