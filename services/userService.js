@@ -8,7 +8,7 @@ async function updateUser(id, data) {
       id,
       { ...safeData, updatedAt: new Date() },
       { new: true }
-    ).select("-password -__v -_id -createdAt -updatedAt -roles");
+    ).select("-password -__v -createdAt -updatedAt -roles");
 
     if (!updated) {
       return { status: 404, message: "User not found", data: null };
