@@ -2,7 +2,7 @@ const userService = require("../services/userService");
 
 async function updateUser(req, res) {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const updateData = req.body;
     if (!updateData || Object.keys(updateData).length === 0) {
       return res
