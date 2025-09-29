@@ -7,7 +7,7 @@ const appointmentSchema = new mongoose.Schema({
     required: true,
   },
   staffId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  service: { type: String, required: true },
+  serviceId: { type: mongoose.Schema.Types.ObjectId,ref: "Service", required: true },
   date: { type: Date, required: true },
   time: { type: String, required: true },
   branchId: {
