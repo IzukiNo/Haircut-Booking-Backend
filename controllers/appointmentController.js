@@ -221,7 +221,7 @@ async function deleteAppointment(req, res) {
 
 async function submitReview(req, res) {
     try {
-        const {appointmentId}=req.params;
+        const { appointmentId } = req.params;
         const { rating, comment } = req.body;
         const customerId = req.user._id;
 
