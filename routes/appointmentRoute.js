@@ -7,13 +7,8 @@ router.post(
   authMiddleware(["user"]),
   appointmentController.createAppointment
 );
-router.post(
-  "/:appointmentId/review",
-  authMiddleware(["user"]),
-  appointmentController.submitReview
-);
 router.get(
-  "/user",
+  "/me",
   authMiddleware(["user"]),
   appointmentController.getAppointmentsByUser
 );
@@ -29,7 +24,7 @@ router.patch(
 );
 router.patch(
   "/:appointmentId/status",
-  authMiddleware(["staff", "admin"]),
+  authMiddleware(["admin"]),
   appointmentController.updateAppointmentStatus
 );
 router.delete(
