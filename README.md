@@ -71,10 +71,10 @@ Before you begin, ensure you have the following installed:
     node app.js
     ```
 
-    The server should now be running on `http://localhost:3000`
+    The server should now be running on `http://localhost:3000` or your port in `.env` file
 
 ## Configuration Options
 
 *   **PORT:**  The port on which the server listens (default: 3000). Configured in the `.env` file.
-*   **MONGODB_URI:** The connection string to the MongoDB database. Configured in the `.env` file.
+*   **MONGO_URL:** The connection string to the MongoDB database. Configured in the `.env` file.
 *   **JWT_SECRET:** A secret key used for signing JSON Web Tokens (JWTs). Configured in the `.env` file.  This should be a strong, randomly generated string.
