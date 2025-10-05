@@ -6,8 +6,12 @@ const appointmentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  staffId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  serviceId: { type: mongoose.Schema.Types.ObjectId,ref: "Service", required: true },
+  staffId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  serviceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Service",
+    required: true,
+  },
   date: { type: Date, required: true },
   time: { type: String, required: true },
   branchId: {
