@@ -20,4 +20,8 @@ async function updateUser(id, data) {
   }
 }
 
-module.exports = { updateUser };
+async function updatePassword(userId, currentPassword, newPassword) {}
+
+async function deleteAccount(userId, password) {}
+
+module.exports = { updateUser, updatePassword, deleteAccount };

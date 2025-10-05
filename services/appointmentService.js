@@ -1,5 +1,4 @@
 const Appointment = require("../models/Appointment");
-const Review = require("../models/Review");
 
 const {
   checkUserHasActiveAppointment,
