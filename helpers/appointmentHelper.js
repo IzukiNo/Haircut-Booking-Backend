@@ -9,7 +9,12 @@ async function checkUserHasActiveAppointment(userId) {
 
     return !!activeAppointment;
   } catch (error) {
-    return true;
+    throw new Error(
+      "Error checking active appointment for user",
+      userId,
+      ":",
+      error
+    );
   }
 }
 

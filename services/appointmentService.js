@@ -16,7 +16,7 @@ async function createAppointment(
   time
 ) {
   try {
-    if (!customerId || !serviceId || !branchId) {
+    if (!customerId || !serviceId || !branchId || !date || !time) {
       return {
         status: 400,
         message: "Missing Parameters",

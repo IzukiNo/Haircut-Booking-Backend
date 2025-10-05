@@ -102,13 +102,9 @@ async function updateAppointmentStatus(req, res) {
 
 async function deleteAppointment(req, res) {
   try {
-    const userId = req.user._id;
     const { appointmentId } = req.params;
 
-    const result = await appointmentService.deleteAppointment(
-      appointmentId,
-      userId
-    );
+    const result = await appointmentService.deleteAppointment(appointmentId);
     res.status(result.status).json(result);
   } catch (error) {
     res.status(500).json({
