@@ -20,7 +20,6 @@ Project cho Nhập Môn Công Nghệ Phần Mềm
 *   Express.js
 *   Mongoose
 *   dotenv
-*   cookie-parser
 *   cors
 
 ## Prerequisites & Dependencies
