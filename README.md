@@ -26,7 +26,7 @@ Project cho Nhập Môn Công Nghệ Phần Mềm
 
 Before you begin, ensure you have the following installed:
 
-*   **Node.js:**  (v14 or higher recommended) - [https://nodejs.org/](https://nodejs.org/)
+*   **Node.js:**  (v22.16 or higher recommended) - [https://nodejs.org/](https://nodejs.org/)
 *   **npm:** (Node Package Manager) - Usually comes with Node.js installation.
 *   **MongoDB:** Ensure you have a MongoDB instance running or accessible.  You can use MongoDB Atlas (cloud-based) or install it locally. - [https://www.mongodb.com/](https://www.mongodb.com/)
 
@@ -52,7 +52,7 @@ Before you begin, ensure you have the following installed:
 
         ```
         PORT=3000
-        MONGODB_URI=<Your MongoDB Connection URI>
+        MONGO_URL=<Your MongoDB Connection URL>
         JWT_SECRET=<Your Secret Key for JWT>
         ```
 
