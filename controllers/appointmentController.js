@@ -3,11 +3,11 @@ const appointmentService = require("../services/appointmentService");
 async function createAppointment(req, res) {
   try {
     const userId = req.user._id;
-    const { staffId, serviceId, branchId, note, date, time } = req.body;
+    const { stylistId, serviceId, branchId, note, date, time } = req.body;
 
     const result = await appointmentService.createAppointment(
       userId,
-      staffId,
+      stylistId,
       serviceId,
       branchId,
       note,

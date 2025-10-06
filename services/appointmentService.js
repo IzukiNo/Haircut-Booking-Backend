@@ -7,7 +7,7 @@ const {
 
 async function createAppointment(
   customerId,
-  staffId,
+  stylistId,
   serviceId,
   branchId,
   note = "",
@@ -32,8 +32,8 @@ async function createAppointment(
       time,
     };
 
-    if (staffId) {
-      appointmentData.staffId = staffId;
+    if (stylistId) {
+      appointmentData.stylistId = stylistId;
     }
 
     const hasActiveAppointment = await checkUserHasActiveAppointment(
@@ -48,7 +48,7 @@ async function createAppointment(
     }
     const hasConflict = await checkAppointmentConflict(
       branchId,
-      staffId,
+      stylistId,
       date,
       time
     );
@@ -142,7 +142,7 @@ async function getAppointmentsByUser(
 
     const appointments = await Appointment.find(filter)
       .populate("customerId", "name email")
-      .populate("staffId", "name email")
+      .populate("stylistId", "name email")
       .populate("serviceId", "name duration price")
       .populate("branchId", "name address")
       .sort({ createdAt: -1 })
@@ -187,7 +187,7 @@ async function getAppointmentById(appointmentId) {
 
     const appointment = await Appointment.findById(appointmentId)
       .populate("customerId", "name email phone")
-      .populate("staffId", "name email")
+      .populate("stylistId", "name email")
       .populate("serviceId", "name duration price description")
       .populate("branchId", "name address phone");
 
@@ -238,7 +238,7 @@ async function updateAppointmentStatus(
 
     const appointment = await Appointment.findById(appointmentId)
       .populate("customerId", "name email")
-      .populate("staffId", "name email")
+      .populate("stylistId", "name email")
       .populate("serviceId", "name duration price")
       .populate("branchId", "name address");
 

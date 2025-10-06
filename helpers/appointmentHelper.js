@@ -9,11 +9,15 @@ async function checkUserHasActiveAppointment(userId) {
 
     return !!activeAppointment;
   } catch (error) {
-    throw new Error(`Error checking active appointment for user ${userId}: ${error && error.message ? error.message : error}`);
+    throw new Error(
+      `Error checking active appointment for user ${userId}: ${
+        error && error.message ? error.message : error
+      }`
+    );
   }
 }
 
-async function checkAppointmentConflict(branchId, staffId, date, time) {
+async function checkAppointmentConflict(branchId, stylistId, date, time) {
   try {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
@@ -27,8 +31,8 @@ async function checkAppointmentConflict(branchId, staffId, date, time) {
       status: { $in: ["pending", "confirmed"] },
     };
 
-    if (staffId) {
-      query.staffId = staffId;
+    if (stylistId) {
+      query.stylistId = stylistId;
     }
 
     const conflict = await Appointment.exists(query);

@@ -4,7 +4,7 @@ const BranchSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
-  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Appointment = require("./Appointment");
 
 const reviewSchema = new mongoose.Schema({
   customerId: {
