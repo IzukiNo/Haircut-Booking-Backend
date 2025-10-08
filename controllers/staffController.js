@@ -58,7 +58,8 @@ async function getAllStaffs(req, res) {
 
 async function updateStaff(req, res) {
   try {
-    const { userId, branchId, position, schedule } = req.body;
+    const { userId } = req.params;
+    const { branchId, position, schedule } = req.body;
     const result = await staffService.updateStaff(userId, {
       branchId,
       position,
