@@ -1,4 +1,5 @@
 const Appointment = require("../models/Appointment");
+const Staff = require("../models/Staff");
 
 const {
   checkUserHasActiveAppointment,
@@ -142,7 +143,10 @@ async function getAppointmentsByUser(
 
     const appointments = await Appointment.find(filter)
       .populate("customerId", "name email")
-      .populate("stylistId", "name email")
+      .populate({
+        path: "stylistId",
+        populate: { path: "userId", select: "name email" },
+      })
       .populate("serviceId", "name duration price")
       .populate("branchId", "name address")
       .sort({ createdAt: -1 })
@@ -213,59 +217,40 @@ async function getAppointmentById(appointmentId) {
   }
 }
 
-async function updateAppointmentStatus(
+async function updateAppointmentStatus({
   appointmentId,
   status = "confirmed",
-  userId
-) {
+  userId = null,
+}) {
   try {
-    if (!appointmentId) {
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment)
+      return { status: 404, message: "Appointment not found", data: null };
+
+    let staffId = null;
+    const staff = await Staff.findOne({ userId });
+    if (staff) staffId = staff._id;
+
+    if (
+      !staffId &&
+      userId &&
+      appointment.customerId.toString() !== userId.toString()
+    ) {
       return {
-        status: 400,
-        message: "Appointment ID is required",
+        status: 403,
+        message: "You don't have permission to update this appointment",
         data: null,
       };
-    }
-
-    const validStatuses = ["pending", "confirmed", "canceled", "completed"];
-    if (!validStatuses.includes(status)) {
-      return {
-        status: 400,
-        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
-        data: null,
-      };
-    }
-
-    const appointment = await Appointment.findById(appointmentId)
-      .populate("customerId", "name email")
-      .populate("stylistId", "name email")
-      .populate("serviceId", "name duration price")
-      .populate("branchId", "name address");
-
-    if (!appointment) {
-      return {
-        status: 404,
-        message: "Appointment not found",
-        data: null,
-      };
-    }
-
-    if (userId) {
-      if (appointment.customerId._id.toString() !== userId.toString()) {
-        return {
-          status: 403,
-          message: "You don't have permission to update this appointment",
-          data: null,
-        };
-      }
     }
 
     appointment.status = status;
+    if (staffId) appointment.approvedBy = staffId;
+
     await appointment.save();
 
     return {
       status: 200,
-      message: `Appointment status updated to ${status} successfully`,
+      message: `Appointment status updated to ${status}`,
       data: appointment,
     };
   } catch (error) {

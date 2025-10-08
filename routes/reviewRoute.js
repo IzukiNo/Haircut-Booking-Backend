@@ -10,3 +10,5 @@ router.get(
   reviewController.getRecentReviews
 );
 router.delete("/:id", authMiddleware(["admin"]), reviewController.deleteReview);
+
+module.exports = router;
