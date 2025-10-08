@@ -70,8 +70,8 @@ async function updateStaff(userId, { branchId, position, schedule }) {
     if (!["receptionist", "manager"].includes(position)) {
       return { status: 400, message: "Invalid position", data: null };
     }
+    staffDB.position = position;
   }
-  if (position) staffDB.position = position;
   if (schedule) staffDB.schedule = schedule;
   const saved = await staffDB.save();
 
