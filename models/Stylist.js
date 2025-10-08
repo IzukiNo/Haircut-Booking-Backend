@@ -39,6 +39,7 @@ const stylistSchema = new mongoose.Schema({
       },
     },
   ],
+  active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
 

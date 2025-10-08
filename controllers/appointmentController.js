@@ -83,12 +83,15 @@ async function getAppointmentById(req, res) {
 
 async function updateAppointmentStatus(req, res) {
   try {
+    const userId = req.user._id;
     const { appointmentId } = req.params;
     const { status } = req.body;
 
     const result = await appointmentService.updateAppointmentStatus(
       appointmentId,
-      status
+      status,
+      userId,
+      true // force: staff
     );
     res.status(result.status).json(result);
   } catch (error) {

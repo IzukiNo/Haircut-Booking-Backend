@@ -1,5 +1,7 @@
 const Branch = require("../models/Branch");
 
+const { Types } = require("mongoose");
+
 async function createBranch(name, address, phone, managerId) {
   try {
     const branch = new Branch({
@@ -51,6 +53,13 @@ async function getAllBranches() {
 
 async function getBranchById(branchId) {
   try {
+    if (!Types.ObjectId.isValid(branchId)) {
+      return {
+        status: 400,
+        message: "Invalid Branch ID",
+        data: null,
+      };
+    }
     const data = await Branch.findById(branchId).populate({
       path: "managerId",
       select: "username email phone",
@@ -78,6 +87,13 @@ async function getBranchById(branchId) {
 
 async function updateBranch(branchId, data) {
   try {
+    if (!Types.ObjectId.isValid(branchId)) {
+      return {
+        status: 400,
+        message: "Invalid Branch ID",
+        data: null,
+      };
+    }
     const updated = await Branch.findByIdAndUpdate(
       branchId,
       { ...data, updatedAt: new Date() },
@@ -107,6 +123,13 @@ async function updateBranch(branchId, data) {
 
 async function deleteBranch(branchId) {
   try {
+    if (!Types.ObjectId.isValid(branchId)) {
+      return {
+        status: 400,
+        message: "Invalid Branch ID",
+        data: null,
+      };
+    }
     const deletedBranch = await Branch.findByIdAndDelete(branchId);
     if (!deletedBranch) {
       return {
