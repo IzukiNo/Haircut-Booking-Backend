@@ -2,6 +2,8 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const { Types } = require("mongoose");
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 async function register(name, email, password) {
@@ -44,6 +46,10 @@ async function login(email, password) {
   return { status: 200, message: "Đăng nhập thành công", token };
 }
 async function me(id) {
+  if (!Types.ObjectId.isValid(id)) {
+    return { status: 400, message: "Invalid User ID", data: null };
+  }
+
   const user = await User.findById(id);
   if (!user) {
     return { status: 404, message: "User không tồn tại" };

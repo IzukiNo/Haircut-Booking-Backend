@@ -1,5 +1,7 @@
 const Service = require("../models/Service");
 
+const { Types } = require("mongoose");
+
 async function createService(name, description, price, status = true) {
   try {
     if (price < 0) {
@@ -43,6 +45,9 @@ async function getAllServices() {
 
 async function getServiceById(serviceId) {
   try {
+    if (!Types.ObjectId.isValid(serviceId)) {
+      return { status: 400, message: "Invalid Service ID", data: null };
+    }
     const service = await Service.findById(serviceId);
     if (!service) {
       return { status: 404, message: "Service not found", data: null };
@@ -63,6 +68,9 @@ async function getServiceById(serviceId) {
 
 async function updateService(serviceId, data) {
   try {
+    if (!Types.ObjectId.isValid(serviceId)) {
+      return { status: 400, message: "Invalid Service ID", data: null };
+    }
     const updated = await Service.findByIdAndUpdate(
       serviceId,
       { ...data, updatedAt: new Date() },
@@ -87,6 +95,9 @@ async function updateService(serviceId, data) {
 
 async function deleteService(serviceId) {
   try {
+    if (!Types.ObjectId.isValid(serviceId)) {
+      return { status: 400, message: "Invalid Service ID", data: null };
+    }
     const deleted = await Service.findByIdAndDelete(serviceId);
     if (!deleted) {
       return { status: 404, message: "Service not found", data: null };

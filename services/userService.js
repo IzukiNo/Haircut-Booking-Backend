@@ -1,9 +1,13 @@
 const User = require("../models/User");
 
+const { Types } = require("mongoose");
+
 async function updateUser(id, data) {
   try {
+    if (!Types.ObjectId.isValid(id)) {
+      return { status: 400, message: "Invalid User ID", data: null };
+    }
     const { password, roles, _id, ...safeData } = data;
-
     const updated = await User.findByIdAndUpdate(
       id,
       { ...safeData, updatedAt: new Date() },

@@ -1,12 +1,30 @@
 const Review = require("../models/Review");
 const Appointment = require("../models/Appointment");
 
+const { Types } = require("mongoose");
+
 async function submitReview(customerId, appointmentId, rating, comment = "") {
   try {
     if (!customerId || !appointmentId || !rating) {
       return {
         status: 400,
         message: "Missing Parameters",
+        data: null,
+      };
+    }
+
+    if (!Types.ObjectId.isValid(customerId)) {
+      return {
+        status: 400,
+        message: "Invalid Customer ID",
+        data: null,
+      };
+    }
+
+    if (!Types.ObjectId.isValid(appointmentId)) {
+      return {
+        status: 400,
+        message: "Invalid Appointment ID",
         data: null,
       };
     }
@@ -211,6 +229,14 @@ async function deleteReview(reviewId) {
       return {
         status: 400,
         message: "Missing reviewId parameter",
+        data: null,
+      };
+    }
+
+    if (!Types.ObjectId.isValid(reviewId)) {
+      return {
+        status: 400,
+        message: "Invalid Review ID",
         data: null,
       };
     }
