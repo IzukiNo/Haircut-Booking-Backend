@@ -25,18 +25,19 @@ async function submitReview(req, res) {
 
 async function getReviewsBy(req, res) {
   try {
-    const { id } = req.params;
-    const type = req.query.type || "all";
+    const { type, id } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const userRoles = req.user ? req.user.roles : [];
+    const rating = req.query.rating ? parseInt(req.query.rating) : null;
+
     const result = await reviewService.getReviewsBy(
       type,
       id,
       page,
       limit,
-      userRoles
+      rating
     );
+
     res.status(result.status).json(result);
   } catch (error) {
     res.status(500).json({

@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoute");
 
 const userRoutes = require("./routes/userRoutes");
 const appointmentRoutes = require("./routes/appointmentRoute");
+const reviewRoutes = require("./routes/reviewRoute");
 
 const branchRoutes = require("./routes/branchRoute");
 const serviceRoutes = require("./routes/serviceRoute");
@@ -43,6 +44,7 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/users", userRoutes);
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use("/api/branches", branchRoutes);
 app.use("/api/services", serviceRoutes);

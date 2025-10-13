@@ -2,6 +2,8 @@ const Staff = require("../models/Staff");
 const User = require("../models/User");
 const employeeHelper = require("../helpers/employeeHelper");
 
+const { addRoleToUser, removeRoleFromUser } = require("../utils/userRoleUtils");
+
 const { Types } = require("mongoose");
 
 async function createStaff({ userId, branchId, position, schedule }) {
@@ -32,6 +34,18 @@ async function createStaff({ userId, branchId, position, schedule }) {
       data: null,
     };
   const staff = await Staff.create({ userId, branchId, position, schedule });
+  if (!staff) {
+    return { status: 500, message: "Failed to create staff", data: null };
+  }
+  const addRole = await addRoleToUser(userId, "staff");
+  if (!addRole) {
+    await staff.deleteOne();
+    return {
+      status: 500,
+      message: "Failed to assign role to user",
+      data: null,
+    };
+  }
   return { status: 201, message: "Staff created", data: staff };
 }
 
@@ -97,7 +111,18 @@ async function deleteStaff(userId) {
     { path: "branchId", select: "name address phone" },
   ]);
 
-  await staffDB.deleteOne();
+  const remove = await staffDB.deleteOne();
+  if (!remove) {
+    return { status: 500, message: "Failed to delete staff", data: null };
+  }
+  const removeRole = await removeRoleFromUser(userId, "staff");
+  if (!removeRole) {
+    return {
+      status: 500,
+      message: "Failed to remove role from user",
+      data: null,
+    };
+  }
 
   return { status: 200, message: "Staff deleted", data: staffDB };
 }

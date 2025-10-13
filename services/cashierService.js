@@ -2,6 +2,8 @@ const Cashier = require("../models/Cashier");
 const User = require("../models/User");
 const employeeHelper = require("../helpers/employeeHelper");
 
+const { addRoleToUser, removeRoleFromUser } = require("../utils/userRoleUtils");
+
 const { Types } = require("mongoose");
 
 async function createCashier({ userId, branchId }) {
@@ -25,6 +27,20 @@ async function createCashier({ userId, branchId }) {
     };
 
   const cashier = await Cashier.create({ userId, branchId });
+  if (!cashier) {
+    return { status: 500, message: "Failed to create cashier", data: null };
+  }
+
+  const addRole = await addRoleToUser(userId, "cashier");
+  if (!addRole) {
+    await cashier.deleteOne();
+    return {
+      status: 500,
+      message: "Failed to assign role to user",
+      data: null,
+    };
+  }
+
   return { status: 201, message: "Cashier created", data: cashier };
 }
 
@@ -88,7 +104,18 @@ async function deleteCashier(userId) {
     { path: "branchId", select: "name address phone" },
   ]);
 
-  await cashierDB.deleteOne();
+  const remove = await cashierDB.deleteOne();
+  if (!remove) {
+    return { status: 500, message: "Failed to delete cashier", data: null };
+  }
+  const removeRole = await removeRoleFromUser(userId, "cashier");
+  if (!removeRole) {
+    return {
+      status: 500,
+      message: "Failed to remove role from user",
+      data: null,
+    };
+  }
 
   return { status: 200, message: "Cashier deleted", data: cashierDB };
 }

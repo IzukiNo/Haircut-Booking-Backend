@@ -31,8 +31,46 @@ async function cancelAppointment(req, res) {
     const { appointmentId } = req.params;
 
     const result = await appointmentService.cancelAppointment(
-      appointmentId,
-      userId
+      userId,
+      appointmentId
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+}
+
+async function approveAppointment(req, res) {
+  try {
+    const staffId = req.user._id;
+    const { appointmentId } = req.params;
+
+    const result = await appointmentService.approveAppointment(
+      staffId,
+      appointmentId
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+}
+
+async function completeAppointment(req, res) {
+  try {
+    const stylistId = req.user._id;
+    const { appointmentId } = req.params;
+
+    const result = await appointmentService.completeAppointment(
+      stylistId,
+      appointmentId
     );
     res.status(result.status).json(result);
   } catch (error) {
@@ -83,15 +121,12 @@ async function getAppointmentById(req, res) {
 
 async function updateAppointmentStatus(req, res) {
   try {
-    const userId = req.user._id;
     const { appointmentId } = req.params;
     const { status } = req.body;
 
-    const result = await appointmentService.updateAppointmentStatus(
+    const result = await appointmentService.changeAppointmentStatus(
       appointmentId,
-      status,
-      userId,
-      true // force: staff
+      status
     );
     res.status(result.status).json(result);
   } catch (error) {
@@ -121,6 +156,8 @@ async function deleteAppointment(req, res) {
 module.exports = {
   createAppointment,
   cancelAppointment,
+  approveAppointment,
+  completeAppointment,
   getAppointmentsByUser,
   getAppointmentById,
   updateAppointmentStatus,

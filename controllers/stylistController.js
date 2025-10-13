@@ -56,8 +56,9 @@ async function getAllStylists(req, res) {
 
 async function updateStylist(req, res) {
   try {
+    const { userId } = req.params;
     const { branchId, schedule } = req.body;
-    const result = await stylistService.updateStylist(req.params.id, {
+    const result = await stylistService.updateStylist(userId, {
       branchId,
       schedule,
     });
@@ -74,7 +75,8 @@ async function updateStylist(req, res) {
 
 async function deleteStylist(req, res) {
   try {
-    const result = await stylistService.deleteStylist(req.params.id);
+    const { userId } = req.params;
+    const result = await stylistService.deleteStylist(userId);
     return res.status(result.status).json(result);
   } catch (err) {
     console.error("deleteStylist error:", err);

@@ -2,6 +2,8 @@ const Stylist = require("../models/Stylist");
 const User = require("../models/User");
 const employeeHelper = require("../helpers/employeeHelper");
 
+const { addRoleToUser, removeRoleFromUser } = require("../utils/userRoleUtils");
+
 const { Types } = require("mongoose");
 
 async function createStylist({ userId, branchId, schedule }) {
@@ -25,6 +27,18 @@ async function createStylist({ userId, branchId, schedule }) {
     return { status: 409, message: "User already is a stylist", data: null };
 
   const stylist = await Stylist.create({ userId, branchId, schedule });
+  if (!stylist) {
+    return { status: 500, message: "Failed to create stylist", data: null };
+  }
+  const addRole = await addRoleToUser(userId, "stylist");
+  if (!addRole) {
+    await stylist.deleteOne();
+    return {
+      status: 500,
+      message: "Failed to assign role to user",
+      data: null,
+    };
+  }
   return { status: 201, message: "Stylist created", data: stylist };
 }
 
@@ -91,7 +105,18 @@ async function deleteStylist(userId) {
     { path: "branchId", select: "name address phone" },
   ]);
 
-  await stylistDB.deleteOne();
+  const removeRole = await removeRoleFromUser(userId, "stylist");
+  if (!removeRole) {
+    return {
+      status: 500,
+      message: "Failed to remove role from user",
+      data: null,
+    };
+  }
+  const remove = await stylistDB.deleteOne();
+  if (!remove) {
+    return { status: 500, message: "Failed to delete stylist", data: null };
+  }
 
   return { status: 200, message: "Stylist deleted", data: stylistDB };
 }

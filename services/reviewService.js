@@ -1,6 +1,7 @@
 const Review = require("../models/Review");
 const Appointment = require("../models/Appointment");
 
+const mongoose = require("mongoose");
 const { Types } = require("mongoose");
 
 async function submitReview(customerId, appointmentId, rating, comment = "") {
@@ -89,32 +90,36 @@ async function submitReview(customerId, appointmentId, rating, comment = "") {
   }
 }
 
-async function getReviewsBy(type, id, page = 1, limit = 10, userRoles = []) {
+async function getReviewsBy(type, id, page = 1, limit = 10, rating = null) {
   try {
-    const canViewSpecific =
-      type === "service" || type === "stylist" || type === "branch";
-    const isUserAllowed =
-      !canViewSpecific ||
-      userRoles.includes("user") ||
-      userRoles.includes("admin");
-
-    if (!isUserAllowed) {
+    const validTypes = ["all", "service", "stylist", "branch"];
+    if (!validTypes.includes(type)) {
       return {
-        status: 403,
-        message: "Permission denied",
+        status: 400,
+        message: "Invalid type",
         data: null,
       };
     }
 
-    let matchAppointment = {};
-    if (type === "service")
-      matchAppointment.serviceId = mongoose.Types.ObjectId(id);
-    else if (type === "stylist")
-      matchAppointment.stylistId = mongoose.Types.ObjectId(id);
-    else if (type === "branch")
-      matchAppointment.branchId = mongoose.Types.ObjectId(id);
+    if (type !== "all" && !Types.ObjectId.isValid(id)) {
+      return {
+        status: 400,
+        message: "Invalid ID format",
+        data: null,
+      };
+    }
 
-    const aggregatePipeline = [
+    let matchConditions = {};
+    if (rating && !isNaN(rating) && rating >= 1 && rating <= 5) {
+      matchConditions.rating = Number(rating);
+    }
+
+    if (type !== "all") {
+      const key = `appointment.${type}Id`;
+      matchConditions[key] = new Types.ObjectId(id);
+    }
+
+    const basePipeline = [
       {
         $lookup: {
           from: "appointments",
@@ -126,11 +131,11 @@ async function getReviewsBy(type, id, page = 1, limit = 10, userRoles = []) {
       { $unwind: "$appointment" },
     ];
 
-    if (type !== "all") {
-      aggregatePipeline.push({ $match: matchAppointment });
-    }
+    if (Object.keys(matchConditions).length > 0)
+      basePipeline.push({ $match: matchConditions });
 
-    aggregatePipeline.push(
+    const dataPipeline = [
+      ...basePipeline,
       {
         $lookup: {
           from: "users",
@@ -142,44 +147,47 @@ async function getReviewsBy(type, id, page = 1, limit = 10, userRoles = []) {
       { $unwind: "$customer" },
       {
         $project: {
+          _id: 1,
           rating: 1,
           comment: 1,
           createdAt: 1,
-          customer: { username: 1, email: 1 },
+          "customer.username": 1,
+          "customer.email": 1,
+          "appointment.serviceId": 1,
+          "appointment.stylistId": 1,
+          "appointment.branchId": 1,
         },
       },
       { $sort: { createdAt: -1 } },
       { $skip: (page - 1) * limit },
-      { $limit: limit }
-    );
+      { $limit: limit },
+    ];
 
-    const reviews = await Review.aggregate(aggregatePipeline);
+    const [reviews, countResult] = await Promise.all([
+      Review.aggregate(dataPipeline),
+      Review.aggregate([...basePipeline, { $count: "total" }]),
+    ]);
 
-    const countPipeline = [...aggregatePipeline];
-    countPipeline.push({ $count: "total" });
-    const totalCountResult = await Review.aggregate(countPipeline);
-    const totalCount = totalCountResult[0]?.total || 0;
+    const totalCount = countResult[0]?.total || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
     return {
       status: 200,
       message: "Reviews fetched successfully",
-      data: {
-        reviews,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalCount,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+      data: reviews,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
     };
   } catch (err) {
-    console.error(err);
+    console.error("Error in getReviewsBy:", err);
     return {
       status: 500,
-      message: "Internal server error",
+      message: "Internal server error: " + err.message,
       data: null,
     };
   }
