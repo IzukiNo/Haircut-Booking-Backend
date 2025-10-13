@@ -22,11 +22,37 @@ async function updateUser(req, res) {
 }
 
 async function updatePassword(req, res) {
-  return res.send("Update password user");
+  try {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    const result = await userService.updatePassword(
+      userId,
+      currentPassword,
+      newPassword
+    );
+    return res.status(result.status).json({ message: result.message });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: error.message || "Internal server error",
+    });
+  }
 }
 
 async function deleteAccount(req, res) {
-  return res.send("Delete account user");
+  try {
+    const userId = req.user._id;
+    const { password } = req.body;
+
+    const result = await userService.deleteAccount(userId, password);
+    return res.status(result.status).json({ message: result.message });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: error.message || "Internal server error",
+    });
+  }
 }
 
 module.exports = { updateUser, updatePassword, deleteAccount };
