@@ -17,7 +17,7 @@ const staffSchema = new mongoose.Schema({
     enum: ["receptionist", "manager"],
     default: "receptionist",
   },
-  workDays: [
+  schedule: [
     {
       day: {
         type: String,
@@ -44,7 +44,7 @@ const staffSchema = new mongoose.Schema({
       },
     },
   ],
-
+  active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
 

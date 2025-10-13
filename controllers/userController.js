@@ -21,8 +21,12 @@ async function updateUser(req, res) {
   }
 }
 
-async function updatePassword(req, res) {}
+async function updatePassword(req, res) {
+  return res.send("Update password user");
+}
 
-async function deleteAccount(req, res) {}
+async function deleteAccount(req, res) {
+  return res.send("Delete account user");
+}
 
-module.exports = { updateUser };
+module.exports = { updateUser, updatePassword, deleteAccount };

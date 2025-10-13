@@ -1,5 +1,9 @@
 const Appointment = require("../models/Appointment");
 
+const { Types } = require("mongoose");
+
+const employeeHelper = require("../helpers/employeeHelper");
+
 const {
   checkUserHasActiveAppointment,
   checkAppointmentConflict,
@@ -23,6 +27,20 @@ async function createAppointment(
       };
     }
 
+    if (
+      !Types.ObjectId.isValid(customerId) ||
+      (branchId && !Types.ObjectId.isValid(branchId)) ||
+      (serviceId && !Types.ObjectId.isValid(serviceId))
+    ) {
+      return {
+        status: 400,
+        message: "Invalid ID",
+        data: null,
+      };
+    }
+
+    let existStylist = null;
+
     const appointmentData = {
       customerId,
       serviceId,
@@ -33,7 +51,25 @@ async function createAppointment(
     };
 
     if (stylistId) {
-      appointmentData.stylistId = stylistId;
+      if (!Types.ObjectId.isValid(stylistId)) {
+        return {
+          status: 400,
+          message: "Invalid stylist ID",
+          data: null,
+        };
+      }
+
+      existStylist = await employeeHelper.getEmployeeById("stylist", stylistId);
+
+      if (!existStylist) {
+        return {
+          status: 404,
+          message: "Stylist not found",
+          data: null,
+        };
+      }
+
+      appointmentData.stylistId = existStylist._id;
     }
 
     const hasActiveAppointment = await checkUserHasActiveAppointment(
@@ -48,7 +84,7 @@ async function createAppointment(
     }
     const hasConflict = await checkAppointmentConflict(
       branchId,
-      stylistId,
+      existStylist ? existStylist._id : null,
       date,
       time
     );
@@ -77,40 +113,117 @@ async function createAppointment(
   }
 }
 
-async function cancelAppointment(appointmentId, userId) {
+async function cancelAppointment(userId, appointmentId) {
   try {
-    if (!appointmentId) {
-      return {
-        status: 400,
-        message: "Appointment ID is required",
-        data: null,
-      };
-    }
+    if (
+      !Types.ObjectId.isValid(userId) ||
+      !Types.ObjectId.isValid(appointmentId)
+    )
+      return { status: 400, message: "Invalid ID" };
 
     const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return { status: 404, message: "Appointment not found" };
 
-    if (!appointment) {
-      return {
-        status: 404,
-        message: "Appointment not found",
-        data: null,
-      };
-    }
+    if (appointment.customerId.toString() !== userId.toString())
+      return { status: 403, message: "You cannot cancel this appointment" };
 
-    if (["canceled", "completed"].includes(appointment.status)) {
+    if (["completed", "canceled"].includes(appointment.status))
       return {
         status: 400,
-        message: `Cannot cancel an appointment that is already ${appointment.status}`,
-        data: null,
+        message: `Cannot cancel ${appointment.status} appointment`,
       };
-    }
 
-    return await updateAppointmentStatus(appointmentId, "canceled", userId);
+    appointment.status = "canceled";
+    await appointment.save();
+
+    return {
+      status: 200,
+      message: "Appointment canceled successfully",
+      data: appointment,
+    };
   } catch (error) {
     return {
       status: 500,
       message: "Failed to cancel appointment: " + error.message,
-      data: null,
+    };
+  }
+}
+
+async function completeAppointment(stylistId, appointmentId) {
+  try {
+    if (
+      !Types.ObjectId.isValid(stylistId) ||
+      !Types.ObjectId.isValid(appointmentId)
+    )
+      return { status: 400, message: "Invalid ID" };
+
+    const stylist = await employeeHelper.findEmployeeById("stylist", stylistId);
+    if (!stylist)
+      return { status: 403, message: "You are not authorized to complete" };
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return { status: 404, message: "Appointment not found" };
+
+    if (appointment.status !== "confirmed")
+      return {
+        status: 400,
+        message: "Only confirmed appointments can be completed",
+      };
+
+    appointment.status = "completed";
+    await appointment.save();
+
+    return {
+      status: 200,
+      message: "Appointment marked as completed",
+      data: appointment,
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to complete appointment: " + error.message,
+    };
+  }
+}
+
+async function approveAppointment(staffId, appointmentId) {
+  try {
+    if (!staffId) return { status: 400, message: "Staff ID is required" };
+    if (!appointmentId)
+      return { status: 400, message: "Appointment ID is required" };
+
+    if (
+      !Types.ObjectId.isValid(staffId) ||
+      !Types.ObjectId.isValid(appointmentId)
+    )
+      return { status: 400, message: "Invalid ID" };
+
+    const staff = await employeeHelper.getEmployeeById("staff", staffId);
+    if (!staff)
+      return { status: 403, message: "You are not authorized to approve" };
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return { status: 404, message: "Appointment not found" };
+
+    if (appointment.status !== "pending")
+      return {
+        status: 400,
+        message: "Only pending appointments can be approved",
+      };
+
+    appointment.status = "confirmed";
+    appointment.approvedBy = staff._id;
+    await appointment.save();
+
+    return {
+      status: 200,
+      message: "Appointment approved successfully",
+      data: appointment,
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to approve appointment: " + error.message,
     };
   }
 }
@@ -130,6 +243,14 @@ async function getAppointmentsByUser(
       };
     }
 
+    if (userId && !Types.ObjectId.isValid(userId)) {
+      return {
+        status: 400,
+        message: "Invalid User ID",
+        data: null,
+      };
+    }
+
     const filter = {
       $or: [{ customerId: userId }],
     };
@@ -141,13 +262,19 @@ async function getAppointmentsByUser(
     const skip = (page - 1) * limit;
 
     const appointments = await Appointment.find(filter)
-      .populate("customerId", "name email")
-      .populate("stylistId", "name email")
-      .populate("serviceId", "name duration price")
-      .populate("branchId", "name address")
+      .select("-approvedBy")
+      .populate("customerId", "name email phone")
+      .populate({
+        path: "stylistId",
+        select: "userId",
+        populate: { path: "userId", select: "username email" },
+      })
+      .populate("serviceId", "name price description")
+      .populate("branchId", "name address phone")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const totalCount = await Appointment.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / limit);
@@ -185,11 +312,27 @@ async function getAppointmentById(appointmentId) {
       };
     }
 
+    if (appointmentId && !Types.ObjectId.isValid(appointmentId)) {
+      return {
+        status: 400,
+        message: "Invalid Appointment ID",
+        data: null,
+      };
+    }
+
     const appointment = await Appointment.findById(appointmentId)
       .populate("customerId", "name email phone")
-      .populate("stylistId", "name email")
-      .populate("serviceId", "name duration price description")
-      .populate("branchId", "name address phone");
+      .populate({
+        path: "stylistId",
+        populate: { path: "userId", select: "name email" },
+      })
+      .populate("serviceId", "name price description")
+      .populate("branchId", "name")
+      .populate({
+        path: "approvedBy",
+        populate: { path: "userId", select: "name email" },
+      })
+      .lean();
 
     if (!appointment) {
       return {
@@ -213,66 +356,32 @@ async function getAppointmentById(appointmentId) {
   }
 }
 
-async function updateAppointmentStatus(
-  appointmentId,
-  status = "confirmed",
-  userId
-) {
+async function changeAppointmentStatus(appointmentId, status) {
   try {
-    if (!appointmentId) {
-      return {
-        status: 400,
-        message: "Appointment ID is required",
-        data: null,
-      };
-    }
+    if (!appointmentId || !status)
+      return { status: 400, message: "Missing Parameters" };
+    const STATUS_ENUM = ["pending", "confirmed", "canceled", "completed"];
+    if (!STATUS_ENUM.includes(status))
+      return { status: 400, message: "Invalid status" };
 
-    const validStatuses = ["pending", "confirmed", "canceled", "completed"];
-    if (!validStatuses.includes(status)) {
-      return {
-        status: 400,
-        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
-        data: null,
-      };
-    }
+    if (!Types.ObjectId.isValid(appointmentId))
+      return { status: 400, message: "Invalid Appointment ID" };
 
-    const appointment = await Appointment.findById(appointmentId)
-      .populate("customerId", "name email")
-      .populate("stylistId", "name email")
-      .populate("serviceId", "name duration price")
-      .populate("branchId", "name address");
-
-    if (!appointment) {
-      return {
-        status: 404,
-        message: "Appointment not found",
-        data: null,
-      };
-    }
-
-    if (userId) {
-      if (appointment.customerId._id.toString() !== userId.toString()) {
-        return {
-          status: 403,
-          message: "You don't have permission to update this appointment",
-          data: null,
-        };
-      }
-    }
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return { status: 404, message: "Appointment not found" };
 
     appointment.status = status;
     await appointment.save();
 
     return {
       status: 200,
-      message: `Appointment status updated to ${status} successfully`,
+      message: `Appointment status changed to ${status}`,
       data: appointment,
     };
   } catch (error) {
     return {
       status: 500,
-      message: "Failed to update appointment status: " + error.message,
-      data: null,
+      message: "Failed to change appointment status: " + error.message,
     };
   }
 }
@@ -283,6 +392,14 @@ async function deleteAppointment(appointmentId) {
       return {
         status: 400,
         message: "Appointment ID is required",
+        data: null,
+      };
+    }
+
+    if (appointmentId && !Types.ObjectId.isValid(appointmentId)) {
+      return {
+        status: 400,
+        message: "Invalid Appointment ID",
         data: null,
       };
     }
@@ -316,8 +433,10 @@ async function deleteAppointment(appointmentId) {
 module.exports = {
   createAppointment,
   cancelAppointment,
+  completeAppointment,
+  approveAppointment,
   getAppointmentsByUser,
   getAppointmentById,
-  updateAppointmentStatus,
+  changeAppointmentStatus,
   deleteAppointment,
 };

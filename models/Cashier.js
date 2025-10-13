@@ -12,6 +12,7 @@ const cashierSchema = new mongoose.Schema({
     ref: "Branch",
     required: true,
   },
+  active: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
 
