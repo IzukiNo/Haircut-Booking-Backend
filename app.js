@@ -30,6 +30,14 @@ app.use(
   })
 );
 
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    console.error("Invalid JSON:", err.message);
+    return res.status(400).json({ message: "Invalid JSON format" });
+  }
+  next();
+});
+
 const env = process.env.NODE_ENV || "prod";
 if (env.trim() === "dev") {
   app.use(morgan("dev"));
