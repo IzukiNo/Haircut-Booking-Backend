@@ -1,36 +1,39 @@
-# Haircut-Booking-Backend
+# Haircut Booking - Backend
 
-Project cho Nhập Môn Công Nghệ Phần Mềm
+## Tổng quan
 
-## Key Features & Benefits
+Đây là Backend cho một ứng dụng đặt lịch cắt tóc toàn diện. Dự án cung cấp một bộ APIs mạnh mẽ để quản lý người dùng, lịch hẹn, chi nhánh, dịch vụ, và nhiều hơn nữa. Được xây dựng với Node.js và Express, nó được thiết kế để có thể mở rộng và dễ dàng bảo trì.
 
-*   **User Authentication:** Secure user registration and login functionality.
-*   **Appointment Management:** Create, cancel, and manage haircut appointments.
-*   **Branch Handling:** Manage multiple branches with associated details.
-*   **Service Management:** Define and manage various haircut services.
-*   **Review System:** Allow users to submit reviews for services.
+## Tính năng chính
 
-### Languages
+* **Xác thực người dùng (User Authentication):** Chức năng đăng ký và đăng nhập người dùng an toàn sử dụng JWT.
+* **Kiểm soát truy cập dựa trên vai trò (Role-Based Access Control):** Phân quyền riêng biệt cho người dùng (users), thợ cắt tóc (stylists), thu ngân (cashiers), nhân viên (staff), và quản trị viên (admins).
+* **Quản lý lịch hẹn (Appointment Management):** Tạo, hủy, và quản lý lịch hẹn cắt tóc với các trạng thái khác nhau (chờ xử lý, đã xác nhận, đã hủy, đã hoàn thành).
+* **Quản lý chi nhánh (Branch Handling):** Quản lý nhiều chi nhánh với các thông tin chi tiết như tên, địa chỉ, số điện thoại, và quản lý.
+* **Quản lý dịch vụ (Service Management):** Xác định và quản lý các dịch vụ cắt tóc khác nhau với mô tả, giá cả, và tình trạng sẵn có.
+* **Quản lý thợ cắt tóc và nhân viên (Stylist and Staff Management):** Quản lý thợ cắt tóc và nhân viên, bao gồm lịch làm việc và chi nhánh được chỉ định.
+* **Hệ thống đánh giá (Review System):** Cho phép người dùng gửi đánh giá và xếp hạng cho các lịch hẹn đã hoàn thành.
+* **Quản lý thu ngân và giao dịch (Cashier and Transaction Management):** Chức năng cho thu ngân xử lý các giao dịch. (Transaction Management soon...)
 
-*   JavaScript
+## Công nghệ sử dụng (Tech Stack)
 
-### Tools & Technologies
+| Hạng mục      | Công nghệ                                                                                                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend** | [Node.js](https://nodejs.org/), [Express.js](https://expressjs.com/)                                                                                                                                          |
+| **Database** | [MongoDB](https://www.mongodb.com/)                                                                                                                                  |
+| **Auth** | [JSON Web Tokens (JWT)](https://jwt.io/), [bcrypt](https://www.npmjs.com/package/bcrypt)                                                                                                                       |
+| **API Tools** | [CORS](https://www.npmjs.com/package/cors), [Morgan](https://www.npmjs.com/package/morgan)                                                                                                                    |
+| **Dev Tools** | [Nodemon](https://nodemon.io/), [dotenv](https://www.npmjs.com/package/dotenv)                                                                                                                               |
 
-*   Node.js
-*   Express.js
-*   Mongoose
-*   dotenv
-*   cors
+## Yêu cầu cài đặt
 
-## Prerequisites & Dependencies
+Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt các công cụ sau:
 
-Before you begin, ensure you have the following installed:
+* **Node.js:** (khuyên dùng phiên bản v16 trở lên) - [https://nodejs.org/](https://nodejs.org/)
+* **npm:** (Node Package Manager) - Thường được cài đặt cùng với Node.js.
+* **MongoDB:** Đảm bảo bạn có một instance MongoDB đang chạy hoặc có thể truy cập được. Bạn có thể sử dụng MongoDB Atlas (dựa trên đám mây) hoặc cài đặt cục bộ. - [https://www.mongodb.com/](https://www.mongodb.com/)
 
-*   **Node.js:**  (v22.16 or higher recommended) - [https://nodejs.org/](https://nodejs.org/)
-*   **npm:** (Node Package Manager) - Usually comes with Node.js installation.
-*   **MongoDB:** Ensure you have a MongoDB instance running or accessible.  You can use MongoDB Atlas (cloud-based) or install it locally. - [https://www.mongodb.com/](https://www.mongodb.com/)
-
-## Installation & Setup Instructions
+## Cài đặt & Thiết lập (Installation & Setup)
 
 1.  **Clone the repository:**
 
@@ -39,16 +42,16 @@ Before you begin, ensure you have the following installed:
     cd Haircut-Booking-Backend
     ```
 
-2.  **Install dependencies:**
+2.  **Cài đặt các dependencies:**
 
     ```bash
     npm install
     ```
 
-3.  **Configure environment variables:**
+3.  **Cấu hình biến môi trường:**
 
-    *   Create a `.env` file in the root directory of the project.
-    *   Add the following environment variables to the `.env` file:
+    * Tạo một tệp `.env` trong thư mục gốc của dự án.
+    * Thêm các biến môi trường sau vào tệp `.env`:
 
         ```
         PORT=3000
@@ -56,25 +59,47 @@ Before you begin, ensure you have the following installed:
         JWT_SECRET=<Your Secret Key for JWT>
         ```
 
-        Replace `<Your MongoDB Connection URI>` with the connection string to your MongoDB database.
-        Replace `<Your Secret Key for JWT>` with a secure, randomly generated secret key.
+        Thay thế `<Your MongoDB Connection URI>` bằng chuỗi kết nối đến cơ sở dữ liệu MongoDB của bạn.
+        Thay thế `<Your Secret Key for JWT>` bằng một khóa bí mật được tạo ngẫu nhiên và an toàn.
 
-4.  **Run the application:**
+4.  **Chạy ứng dụng:**
+
+    Để chạy Server trong môi trường Develop (Nodemon + Morgan):
+
+    ```bash
+    npm run dev
+    ```
+
+    Để chạy Server trong môi trường Production:
 
     ```bash
     npm start
     ```
 
-    or
+    Máy chủ sẽ bắt đầu chạy trên `http://localhost:3000` (hoặc cổng bạn đã chỉ định trong tệp `.env`).
 
-    ```bash
-    node app.js
-    ```
+## API Endpoints
 
-    The server should now be running on `http://localhost:3000` or your port in `.env` file
+Đây là tổng quan cấp cao về các API routes có sẵn:
 
-## Configuration Options
+* **Authentication:** `/api/auth/register`, `/api/auth/login`, `/api/auth/me`
+* **Users:** `/api/users/me`
+* **Appointments:** `/api/appointments`
+* **Reviews:** `/api/reviews`
+* **Branches:** `/api/branches`
+* **Services:** `/api/services`
+* **Stylists:** `/api/stylists`
+* **Staff:** `/api/staffs`
+* **Cashiers:** `/api/cashiers`
 
-*   **PORT:**  The port on which the server listens (default: 3000). Configured in the `.env` file.
-*   **MONGO_URL:** The connection string to the MongoDB database. Configured in the `.env` file.
-*   **JWT_SECRET:** A secret key used for signing JSON Web Tokens (JWTs). Configured in the `.env` file.  This should be a strong, randomly generated string.
+Để biết thông tin chi tiết về từng endpoint, vui lòng tham khảo các định nghĩa route trong thư mục `routes/`.
+
+## Cấu hình (Configuration)
+
+* **`PORT`:** Cổng mà máy chủ lắng nghe (mặc định: 3000). Được cấu hình trong tệp `.env`.
+* **`MONGO_URL`:** Chuỗi kết nối đến cơ sở dữ liệu MongoDB. Được cấu hình trong tệp `.env`.
+* **`JWT_SECRET`:** Khóa bí mật được sử dụng để ký JSON Web Tokens (JWTs). Được cấu hình trong tệp `.env`. Đây phải là một chuỗi mạnh, được tạo ngẫu nhiên.
+
+## Giấy phép (License)
+
+Dự án này được cấp phép theo Giấy phép ISC. Xem tệp [package.json](package.json) để biết chi tiết.
