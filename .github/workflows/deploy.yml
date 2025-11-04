@@ -10,7 +10,7 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: SSH into VPS and deploy
+            - name: SSH and Deploy to VPS
               uses: appleboy/ssh-action@v0.1.10
               with:
                   host: ${{ secrets.VPS_HOST }}
@@ -18,6 +18,10 @@ jobs:
                   key: ${{ secrets.VPS_SSH_KEY }}
                   port: 22
                   script: |
+                      export NVM_DIR="$HOME/.nvm"
+                      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                      export PATH=$NVM_DIR/versions/node/v20.19.4/bin:$PATH
+
                       cd Haircut-Booking-Backend
                       git fetch origin main
                       git reset --hard origin/main
