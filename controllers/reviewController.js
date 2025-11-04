@@ -2,12 +2,10 @@ const reviewService = require("../services/reviewService");
 
 async function submitReview(req, res) {
   try {
-    const userId = req.user._id;
     const { appointmentId } = req.params;
     const { rating, comment } = req.body;
 
     const result = await reviewService.submitReview(
-      userId,
       appointmentId,
       rating,
       comment

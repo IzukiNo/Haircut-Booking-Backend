@@ -7,14 +7,24 @@ router.post(
   authMiddleware(["user"]),
   appointmentController.createAppointment
 );
+router.post(
+  "/force",
+  authMiddleware(["staff", "admin"]),
+  appointmentController.forceCreateAppointment
+);
 router.get(
   "/me",
   authMiddleware(["user"]),
   appointmentController.getAppointmentsByUser
 );
 router.get(
+  "/",
+  authMiddleware(["stylist", "staff", "admin"]),
+  appointmentController.getAllAppointments
+);
+router.get(
   "/:appointmentId",
-  authMiddleware(["staff"]),
+  authMiddleware(["staff", "admin"]),
   appointmentController.getAppointmentById
 );
 router.patch(
@@ -24,18 +34,23 @@ router.patch(
 );
 router.patch(
   "/:appointmentId/approve",
-  authMiddleware(["staff"]),
+  authMiddleware(["staff", "admin"]),
   appointmentController.approveAppointment
 );
 router.patch(
   "/:appointmentId/complete",
-  authMiddleware(["stylist"]),
+  authMiddleware(["stylist", "admin"]),
   appointmentController.completeAppointment
 );
 router.patch(
   "/:appointmentId/status",
   authMiddleware(["admin"]),
   appointmentController.updateAppointmentStatus
+);
+router.patch(
+  "/:appointmentId/services",
+  authMiddleware(["stylist", "staff", "admin"]),
+  appointmentController.updateAppointmentServices
 );
 router.delete(
   "/:appointmentId",

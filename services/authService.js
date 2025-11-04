@@ -6,6 +6,18 @@ const { Types } = require("mongoose");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+function getHighestRoleId(userRoles) {
+  const roles = ["user", "cashier", "stylist", "staff", "admin"];
+  if (!userRoles || userRoles.length === 0) return 0;
+  let highest = userRoles[0];
+  for (const role of userRoles) {
+    if (roles.indexOf(role) > roles.indexOf(highest)) {
+      highest = role;
+    }
+  }
+  return roles.indexOf(highest);
+}
+
 async function register(name, email, password) {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -56,9 +68,11 @@ async function me(id) {
   }
 
   const data = {
+    id: user._id,
     username: user.username,
     email: user.email,
     phone: user.phone ? user.phone : "",
+    role: getHighestRoleId(user.roles),
   };
 
   return { status: 200, message: "Lấy thông tin User thành công", data };

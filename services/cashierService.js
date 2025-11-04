@@ -6,7 +6,7 @@ const { addRoleToUser, removeRoleFromUser } = require("../utils/userRoleUtils");
 
 const { Types } = require("mongoose");
 
-async function createCashier({ userId, branchId }) {
+async function createCashier({ userId, branchId, schedule }) {
   if (!userId || !branchId) {
     return { status: 400, message: "Missing Parameters", data: null };
   }
@@ -26,7 +26,7 @@ async function createCashier({ userId, branchId }) {
       data: null,
     };
 
-  const cashier = await Cashier.create({ userId, branchId });
+  const cashier = await Cashier.create({ userId, branchId, schedule });
   if (!cashier) {
     return { status: 500, message: "Failed to create cashier", data: null };
   }

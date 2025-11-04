@@ -17,13 +17,17 @@ const stylistRoutes = require("./routes/stylistRoute");
 const staffRoutes = require("./routes/staffRoute");
 const cashierRoutes = require("./routes/cashierRoute");
 
+const employeeRoutes = require("./routes/employeeRoute");
+
+const transactionRoutes = require("./routes/transactionRoute");
+
 const port = process.env.PORT || 3000;
 
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || `http://localhost:3001`,
+    origin: "*",
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -61,10 +65,29 @@ app.use("/api/stylists", stylistRoutes);
 app.use("/api/staffs", staffRoutes);
 app.use("/api/cashiers", cashierRoutes);
 
-app.listen(port, () => {
-  console.log(
-    "Current Environment:",
-    env.trim() === "dev" ? "Development ⚙️" : "Production 🟢"
-  );
-  console.log(`🟢 Server is running on http://localhost:${port}`);
-});
+app.use("/api/employees", employeeRoutes);
+
+app.use("/api/transactions", transactionRoutes);
+
+const startServer = (portToTry) => {
+  const server = app.listen(portToTry, () => {
+    console.log(
+      "Current Environment:",
+      env.trim() === "dev" ? "Development ⚙️" : "Production 🟢"
+    );
+    console.log(`🟢 Server is running on http://localhost:${portToTry}`);
+  });
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(
+        `Port ${portToTry} is in use, trying port ${portToTry + 1}...`
+      );
+      startServer(portToTry + 1);
+    } else {
+      console.error("Server error:", err);
+    }
+  });
+};
+
+startServer(Number(port));

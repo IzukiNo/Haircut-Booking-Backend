@@ -26,13 +26,33 @@ async function createService(name, description, price, status = true) {
   }
 }
 
-async function getAllServices() {
+async function getAllServices(page = 1, limit = 10, status = "all") {
   try {
-    const services = await Service.find();
+    page = Number(page);
+    limit = Number(limit);
+
+    const query =
+      status === "all" ? {} : { status: status === "active" ? true : false };
+
+    const services = await Service.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const totalCount = await Service.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
+
     return {
       status: 200,
       message: "Services fetched successfully",
       data: services,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   } catch (err) {
     return {

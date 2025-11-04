@@ -11,11 +11,13 @@ const appointmentSchema = new mongoose.Schema({
     ref: "Stylist",
     default: null,
   },
-  serviceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Service",
-    required: true,
-  },
+  serviceId: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+      required: true,
+    },
+  ],
   branchId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Branch",
@@ -34,6 +36,15 @@ const appointmentSchema = new mongoose.Schema({
     default: "pending",
   },
   note: { type: String },
+  transactionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Transaction",
+    default: null,
+  },
+  isPaid: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

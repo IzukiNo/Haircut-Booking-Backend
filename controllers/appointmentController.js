@@ -104,6 +104,26 @@ async function getAppointmentsByUser(req, res) {
   }
 }
 
+async function getAllAppointments(req, res) {
+  try {
+    const { status, page, limit } = req.query;
+
+    const result = await appointmentService.getAllAppointments(
+      status,
+      Number(page),
+      Number(limit)
+    );
+
+    res.status(result.status).json(result);
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+}
+
 async function getAppointmentById(req, res) {
   try {
     const { appointmentId } = req.params;
@@ -153,13 +173,62 @@ async function deleteAppointment(req, res) {
   }
 }
 
+async function updateAppointmentServices(req, res) {
+  try {
+    const { appointmentId } = req.params;
+    const stylistId = req.user._id;
+    const { serviceId } = req.body;
+
+    const result = await appointmentService.updateAppointmentService(
+      stylistId,
+      appointmentId,
+      serviceId
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+}
+
+async function forceCreateAppointment(req, res) {
+  try {
+    const { email, stylistId, serviceId, branchId, note, date, time } =
+      req.body;
+
+    const result = await appointmentService.forceCreateAppointment(
+      email,
+      stylistId,
+      serviceId,
+      branchId,
+      note,
+      date,
+      time
+    );
+
+    return res.status(result.status).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+}
+
 module.exports = {
   createAppointment,
   cancelAppointment,
   approveAppointment,
   completeAppointment,
   getAppointmentsByUser,
+  getAllAppointments,
   getAppointmentById,
   updateAppointmentStatus,
+  updateAppointmentServices,
   deleteAppointment,
+  forceCreateAppointment,
 };

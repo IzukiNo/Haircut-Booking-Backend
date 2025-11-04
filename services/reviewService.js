@@ -1,23 +1,14 @@
 const Review = require("../models/Review");
 const Appointment = require("../models/Appointment");
 
-const mongoose = require("mongoose");
 const { Types } = require("mongoose");
 
-async function submitReview(customerId, appointmentId, rating, comment = "") {
+async function submitReview(appointmentId, rating, comment = "") {
   try {
-    if (!customerId || !appointmentId || !rating) {
+    if (!appointmentId || !rating) {
       return {
         status: 400,
         message: "Missing Parameters",
-        data: null,
-      };
-    }
-
-    if (!Types.ObjectId.isValid(customerId)) {
-      return {
-        status: 400,
-        message: "Invalid Customer ID",
         data: null,
       };
     }
@@ -55,7 +46,10 @@ async function submitReview(customerId, appointmentId, rating, comment = "") {
       };
     }
 
-    const existingReview = await Review.findOne({ customerId, appointmentId });
+    const existingReview = await Review.findOne({
+      customerId: appointment.customerId,
+      appointmentId,
+    });
     if (existingReview) {
       return {
         status: 403,
@@ -65,16 +59,11 @@ async function submitReview(customerId, appointmentId, rating, comment = "") {
     }
 
     const review = await Review.create({
-      customerId,
+      customerId: appointment.customerId,
       appointmentId,
       rating,
       comment,
     });
-
-    await review.populate([
-      { path: "customerId", select: "name email" },
-      { path: "appointmentId", select: "date time status" },
-    ]);
 
     return {
       status: 201,

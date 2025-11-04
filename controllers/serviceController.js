@@ -26,7 +26,8 @@ async function createService(req, res) {
 
 async function getAllServices(req, res) {
   try {
-    const result = await serviceService.getAllServices();
+    const { page, limit } = req.query;
+    const result = await serviceService.getAllServices(page, limit);
     return res.status(result.status).json(result);
   } catch (error) {
     return res

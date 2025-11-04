@@ -16,6 +16,12 @@ const transactionSchema = new mongoose.Schema({
     ref: "Cashier",
     required: true,
   },
+  details: {
+    type: Object,
+    customerName: { type: String },
+    services: [{ type: Object }],
+    required: true,
+  },
   amount: {
     type: Number,
     required: true,

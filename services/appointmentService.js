@@ -1,4 +1,7 @@
 const Appointment = require("../models/Appointment");
+const Review = require("../models/Review");
+
+const User = require("../models/User");
 
 const { Types } = require("mongoose");
 
@@ -12,7 +15,7 @@ const {
 async function createAppointment(
   customerId,
   stylistId,
-  serviceId,
+  serviceId, // 🔥 có thể là 1 ID hoặc mảng ID
   branchId,
   note = "",
   date,
@@ -27,10 +30,12 @@ async function createAppointment(
       };
     }
 
+    const serviceIds = Array.isArray(serviceId) ? serviceId : [serviceId];
+    const allValidIds = serviceIds.every((id) => Types.ObjectId.isValid(id));
     if (
       !Types.ObjectId.isValid(customerId) ||
       (branchId && !Types.ObjectId.isValid(branchId)) ||
-      (serviceId && !Types.ObjectId.isValid(serviceId))
+      !allValidIds
     ) {
       return {
         status: 400,
@@ -43,7 +48,7 @@ async function createAppointment(
 
     const appointmentData = {
       customerId,
-      serviceId,
+      serviceId: serviceIds,
       branchId,
       note,
       date,
@@ -60,7 +65,6 @@ async function createAppointment(
       }
 
       existStylist = await employeeHelper.getEmployeeById("stylist", stylistId);
-
       if (!existStylist) {
         return {
           status: 404,
@@ -71,14 +75,14 @@ async function createAppointment(
 
       appointmentData.stylistId = existStylist._id;
     }
-
     const hasActiveAppointment = await checkUserHasActiveAppointment(
       customerId
     );
     if (hasActiveAppointment) {
       return {
         status: 403,
-        message: "Not available - You have an active appointment",
+        message:
+          "Bạn đang có lịch hẹn đang chờ hoặc đã được xác nhận nhưng chưa hoàn thành.",
         data: null,
       };
     }
@@ -154,28 +158,42 @@ async function completeAppointment(stylistId, appointmentId) {
     if (
       !Types.ObjectId.isValid(stylistId) ||
       !Types.ObjectId.isValid(appointmentId)
-    )
+    ) {
       return { status: 400, message: "Invalid ID" };
+    }
 
-    const stylist = await employeeHelper.findEmployeeById("stylist", stylistId);
-    if (!stylist)
+    const stylist = await employeeHelper.getEmployeeById("stylist", stylistId);
+    if (!stylist) {
       return { status: 403, message: "You are not authorized to complete" };
+    }
+
+    console.log("Stylist found:", stylist);
 
     const appointment = await Appointment.findById(appointmentId);
-    if (!appointment) return { status: 404, message: "Appointment not found" };
+    if (!appointment) {
+      return { status: 404, message: "Appointment not found" };
+    }
 
-    if (appointment.status !== "confirmed")
+    if (appointment.stylistId?.toString() !== stylist._id.toString()) {
+      return {
+        status: 403,
+        message: "Bạn không được phép hoàn thành cuộc hẹn này",
+      };
+    }
+
+    if (appointment.status !== "confirmed") {
       return {
         status: 400,
-        message: "Only confirmed appointments can be completed",
+        message: "Chỉ những cuộc hẹn đã xác nhận mới có thể hoàn thành",
       };
+    }
 
     appointment.status = "completed";
     await appointment.save();
 
     return {
       status: 200,
-      message: "Appointment marked as completed",
+      message: "Cuộc hẹn đã được đánh dấu là hoàn thành",
       data: appointment,
     };
   } catch (error) {
@@ -263,13 +281,62 @@ async function getAppointmentsByUser(
 
     const appointments = await Appointment.find(filter)
       .select("-approvedBy")
-      .populate("customerId", "name email phone")
       .populate({
         path: "stylistId",
         select: "userId",
-        populate: { path: "userId", select: "username email" },
+        populate: { path: "userId", select: "username" },
       })
       .populate("serviceId", "name price description")
+      .populate("branchId", "name address phone")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalCount = await Appointment.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      status: 200,
+      message: "Appointments retrieved successfully",
+      data: {
+        appointments,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to get appointments: " + error.message,
+      data: null,
+    };
+  }
+}
+async function getAllAppointments(status = "all", page = 1, limit = 10) {
+  try {
+    const filter = {};
+
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const appointments = await Appointment.find(filter)
+      .select("-approvedBy")
+      .populate("customerId", "username")
+      .populate({
+        path: "stylistId",
+        select: "userId",
+        populate: { path: "userId", select: "username" },
+      })
+      .populate("serviceId", "name price")
       .populate("branchId", "name address phone")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -430,13 +497,175 @@ async function deleteAppointment(appointmentId) {
   }
 }
 
+async function updateAppointmentService(stylistId, appointmentId, serviceIds) {
+  try {
+    if (!appointmentId || !serviceIds) {
+      return {
+        status: 400,
+        message: "Missing Parameters",
+        data: null,
+      };
+    }
+    if (!Types.ObjectId.isValid(appointmentId)) {
+      return {
+        status: 400,
+        message: "Invalid Appointment ID",
+        data: null,
+      };
+    }
+    if (!Array.isArray(serviceIds) || serviceIds.length === 0) {
+      return {
+        status: 400,
+        message: "Invalid Service IDs",
+        data: null,
+      };
+    }
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return {
+        status: 404,
+        message: "Appointment not found",
+        data: null,
+      };
+    }
+
+    const stylist = await employeeHelper.getEmployeeById("stylist", stylistId);
+    if (!stylist) {
+      return { status: 403, message: "You are not authorized to update" };
+    }
+
+    if (appointment.stylistId.toString() !== stylist._id.toString()) {
+      return {
+        status: 403,
+        message: "Bạn không được phép cập nhật cuộc hẹn này",
+      };
+    }
+
+    appointment.serviceId = serviceIds;
+    await appointment.save();
+
+    return {
+      status: 200,
+      message: "Cập nhật dịch vụ cuộc hẹn thành công",
+      data: appointment,
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to update appointment services: " + error.message,
+      data: null,
+    };
+  }
+}
+
+async function forceCreateAppointment(
+  email, // ✅ thay vì customerId
+  stylistId,
+  serviceId, // có thể là 1 hoặc nhiều ID
+  branchId,
+  note = "",
+  date,
+  time
+) {
+  try {
+    // 🔎 Validate cơ bản
+    if (!email || !serviceId || !branchId || !date || !time) {
+      return {
+        status: 400,
+        message: "Missing Parameters",
+        data: null,
+      };
+    }
+
+    // 🔍 Lấy customerId từ email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return {
+        status: 404,
+        message: "Customer not found with provided email",
+        data: null,
+      };
+    }
+
+    // 🔧 Chuẩn hóa serviceId thành mảng
+    const serviceIds = Array.isArray(serviceId) ? serviceId : [serviceId];
+    const allValidIds = serviceIds.every((id) => Types.ObjectId.isValid(id));
+    if (
+      !Types.ObjectId.isValid(user._id) ||
+      (branchId && !Types.ObjectId.isValid(branchId)) ||
+      !allValidIds
+    ) {
+      return {
+        status: 400,
+        message: "Invalid ID format",
+        data: null,
+      };
+    }
+
+    // 🔍 Stylist (nếu có)
+    let existStylist = null;
+    if (stylistId) {
+      if (!Types.ObjectId.isValid(stylistId)) {
+        return {
+          status: 400,
+          message: "Invalid stylist ID",
+          data: null,
+        };
+      }
+
+      existStylist = await employeeHelper.getEmployeeById("stylist", stylistId);
+      if (!existStylist) {
+        return {
+          status: 404,
+          message: "Stylist not found",
+          data: null,
+        };
+      }
+    }
+
+    // 🧩 Dữ liệu appointment
+    const appointmentData = {
+      customerId: user._id,
+      serviceId: serviceIds,
+      branchId,
+      note,
+      date,
+      time,
+    };
+
+    if (existStylist) {
+      appointmentData.stylistId = existStylist._id;
+    }
+
+    // ⚡ Force create: bỏ qua check active/conflict
+    const appointment = new Appointment(appointmentData);
+    const savedAppointment = await appointment.save();
+
+    return {
+      status: 201,
+      message: "Appointment force-created successfully by admin",
+      data: savedAppointment,
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      message: "Failed to force-create appointment: " + error.message,
+      data: null,
+    };
+  }
+}
+
 module.exports = {
   createAppointment,
   cancelAppointment,
   completeAppointment,
   approveAppointment,
   getAppointmentsByUser,
+  getAllAppointments,
   getAppointmentById,
+  updateAppointmentService,
   changeAppointmentStatus,
   deleteAppointment,
+  forceCreateAppointment,
 };
