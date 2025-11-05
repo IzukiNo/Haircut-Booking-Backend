@@ -19,7 +19,7 @@ router.get(
 );
 router.get(
   "/",
-  authMiddleware(["stylist", "staff", "admin"]),
+  authMiddleware(["cashier", "stylist", "staff", "admin"]),
   appointmentController.getAllAppointments
 );
 router.get(
