@@ -1,5 +1,9 @@
+require("dotenv").config();
 const https = require("https");
 const fs = require("fs");
+
+const app = require("./app");
+const env = process.env.NODE_ENV || "prod";
 
 const options = {
   key: fs.readFileSync("/etc/ssl/cloudflare/origin.key"),
@@ -11,5 +15,5 @@ https.createServer(options, app).listen(443, "0.0.0.0", () => {
     "Current Environment:",
     env.trim() === "dev" ? "Development ⚙️" : "Production 🟢"
   );
-  console.log("HTTPS Server running on https://api.izukino.tech");
+  console.log("✅ HTTPS server running on https://api.izukino.tech");
 });
