@@ -15,7 +15,7 @@ const {
 async function createAppointment(
   customerId,
   stylistId,
-  serviceId, // 🔥 có thể là 1 ID hoặc mảng ID
+  serviceId,
   branchId,
   note = "",
   date,
@@ -95,7 +95,8 @@ async function createAppointment(
     if (hasConflict) {
       return {
         status: 409,
-        message: "Not available - Time slot conflict",
+        message:
+          "Khung giờ này hiện không khả dụng do bị trùng với lịch hẹn của khách khác!",
         data: null,
       };
     }
@@ -105,7 +106,7 @@ async function createAppointment(
 
     return {
       status: 201,
-      message: "Appointment created successfully",
+      message: "Đặt lịch hẹn thành công",
       data: savedAppointment,
     };
   } catch (error) {
@@ -164,20 +165,23 @@ async function completeAppointment(stylistId, appointmentId) {
 
     const stylist = await employeeHelper.getEmployeeById("stylist", stylistId);
     if (!stylist) {
-      return { status: 403, message: "You are not authorized to complete" };
+      return {
+        status: 403,
+        message: "Bạn không có quyền hoàn thành cuộc hẹn này",
+      };
     }
 
     console.log("Stylist found:", stylist);
 
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
-      return { status: 404, message: "Appointment not found" };
+      return { status: 404, message: "Cuộc hẹn không tồn tại" };
     }
 
     if (appointment.stylistId?.toString() !== stylist._id.toString()) {
       return {
         status: 403,
-        message: "Bạn không được phép hoàn thành cuộc hẹn này",
+        message: "Bạn không phải thợ làm của cuộc hẹn này",
       };
     }
 
@@ -218,15 +222,18 @@ async function approveAppointment(staffId, appointmentId) {
 
     const staff = await employeeHelper.getEmployeeById("staff", staffId);
     if (!staff)
-      return { status: 403, message: "You are not authorized to approve" };
+      return {
+        status: 403,
+        message: "Bạn không có quyền phê duyệt cuộc hẹn này",
+      };
 
     const appointment = await Appointment.findById(appointmentId);
-    if (!appointment) return { status: 404, message: "Appointment not found" };
+    if (!appointment) return { status: 404, message: "Cuộc hẹn không tồn tại" };
 
     if (appointment.status !== "pending")
       return {
         status: 400,
-        message: "Only pending appointments can be approved",
+        message: "Chỉ những cuộc hẹn đang chờ mới có thể được phê duyệt",
       };
 
     appointment.status = "confirmed";
@@ -235,7 +242,7 @@ async function approveAppointment(staffId, appointmentId) {
 
     return {
       status: 200,
-      message: "Appointment approved successfully",
+      message: "Cuộc hẹn đã được phê duyệt thành công",
       data: appointment,
     };
   } catch (error) {
@@ -532,13 +539,16 @@ async function updateAppointmentService(stylistId, appointmentId, serviceIds) {
 
     const stylist = await employeeHelper.getEmployeeById("stylist", stylistId);
     if (!stylist) {
-      return { status: 403, message: "You are not authorized to update" };
+      return {
+        status: 403,
+        message: "Bạn không có quyền cập nhật cuộc hẹn này",
+      };
     }
 
     if (appointment.stylistId.toString() !== stylist._id.toString()) {
       return {
         status: 403,
-        message: "Bạn không được phép cập nhật cuộc hẹn này",
+        message: "Bạn không phải thợ làm của cuộc hẹn này",
       };
     }
 
@@ -560,16 +570,15 @@ async function updateAppointmentService(stylistId, appointmentId, serviceIds) {
 }
 
 async function forceCreateAppointment(
-  email, // ✅ thay vì customerId
+  email,
   stylistId,
-  serviceId, // có thể là 1 hoặc nhiều ID
+  serviceId,
   branchId,
   note = "",
   date,
   time
 ) {
   try {
-    // 🔎 Validate cơ bản
     if (!email || !serviceId || !branchId || !date || !time) {
       return {
         status: 400,
@@ -578,7 +587,6 @@ async function forceCreateAppointment(
       };
     }
 
-    // 🔍 Lấy customerId từ email
     const user = await User.findOne({ email });
     if (!user) {
       return {
@@ -588,7 +596,6 @@ async function forceCreateAppointment(
       };
     }
 
-    // 🔧 Chuẩn hóa serviceId thành mảng
     const serviceIds = Array.isArray(serviceId) ? serviceId : [serviceId];
     const allValidIds = serviceIds.every((id) => Types.ObjectId.isValid(id));
     if (
@@ -603,7 +610,6 @@ async function forceCreateAppointment(
       };
     }
 
-    // 🔍 Stylist (nếu có)
     let existStylist = null;
     if (stylistId) {
       if (!Types.ObjectId.isValid(stylistId)) {
@@ -624,7 +630,6 @@ async function forceCreateAppointment(
       }
     }
 
-    // 🧩 Dữ liệu appointment
     const appointmentData = {
       customerId: user._id,
       serviceId: serviceIds,
@@ -638,7 +643,6 @@ async function forceCreateAppointment(
       appointmentData.stylistId = existStylist._id;
     }
 
-    // ⚡ Force create: bỏ qua check active/conflict
     const appointment = new Appointment(appointmentData);
     const savedAppointment = await appointment.save();
 
