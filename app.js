@@ -69,25 +69,25 @@ app.use("/api/employees", employeeRoutes);
 
 app.use("/api/transactions", transactionRoutes);
 
-const startServer = (portToTry) => {
-  const server = app.listen(portToTry, () => {
-    console.log(
-      "Current Environment:",
-      env.trim() === "dev" ? "Development ⚙️" : "Production 🟢"
-    );
-    console.log(`🟢 Server is running on http://localhost:${portToTry}`);
-  });
+// const startServer = (portToTry) => {
+//   const server = app.listen(portToTry, () => {
+//     console.log(
+//       "Current Environment:",
+//       env.trim() === "dev" ? "Development ⚙️" : "Production 🟢"
+//     );
+//     console.log(`🟢 Server is running on http://localhost:${portToTry}`);
+//   });
 
-  server.on("error", (err) => {
-    if (err.code === "EADDRINUSE") {
-      console.warn(
-        `Port ${portToTry} is in use, trying port ${portToTry + 1}...`
-      );
-      startServer(portToTry + 1);
-    } else {
-      console.error("Server error:", err);
-    }
-  });
-};
+//   server.on("error", (err) => {
+//     if (err.code === "EADDRINUSE") {
+//       console.warn(
+//         `Port ${portToTry} is in use, trying port ${portToTry + 1}...`
+//       );
+//       startServer(portToTry + 1);
+//     } else {
+//       console.error("Server error:", err);
+//     }
+//   });
+// };
 
-startServer(Number(port));
+// startServer(Number(port));
